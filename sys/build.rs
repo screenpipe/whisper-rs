@@ -1,6 +1,7 @@
 #![allow(clippy::uninlined_format_args)]
 
 extern crate bindgen;
+extern crate semver;
 
 use cmake::Config;
 use std::env;
@@ -119,7 +120,24 @@ fn main() {
         let _: u64 = std::fs::copy("src/bindings.rs", out.join("bindings.rs"))
             .expect("Failed to copy bindings.rs");
     } else {
-        let mut bindings = bindgen::Builder::default().header("wrapper.h");
+        // https://github.com/rust-lang/rust-bindgen/issues/2691
+        // https://github.com/rust-lang/rust-bindgen/issues/3264
+        // https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs/-/issues/779
+        let package_msrv = match option_env!("CARGO_PKG_RUST_VERSION") {
+            Some(v) if !v.is_empty() => {
+                let v = semver::Version::parse(v).expect("Invalid CARGO_PKG_RUST_VERSION");
+                bindgen::RustTarget::stable(v.minor, v.patch)
+            }
+            // as_chunks in utilities.rs requires 1.88+
+            _ => bindgen::RustTarget::stable(88, 0),
+        }
+        .map_err(|v| v.to_string())
+        .unwrap();
+
+        let mut bindings = bindgen::Builder::default()
+            .rust_edition(bindgen::RustEdition::Edition2021)
+            .rust_target(package_msrv)
+            .header("wrapper.h");
 
         #[cfg(feature = "metal")]
         {
