@@ -30,7 +30,7 @@ fn main() {
     let whisper_path = PathBuf::from(
         std::env::args()
             .nth(1)
-            .expect("first argument should be path to audio file"),
+            .expect("first argument should be path to whisper model file"),
     );
     if !whisper_path.exists() {
         panic!("whisper file doesn't exist")
@@ -38,7 +38,7 @@ fn main() {
     let audio_path = PathBuf::from(
         std::env::args()
             .nth(2)
-            .expect("second argument should be path to whisper model file"),
+            .expect("second argument should be path to audio file"),
     );
     if !audio_path.exists() {
         panic!("audio file doesn't exist");
