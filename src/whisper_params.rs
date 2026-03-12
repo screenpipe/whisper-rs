@@ -122,7 +122,7 @@ impl<'a, 'b> FullParams<'a, 'b> {
         self.fp.duration_ms = duration_ms;
     }
 
-    /// Set whether to translate the output to the language specified by `language`.
+    /// Set whether to translate the output. This only translates to English.
     ///
     /// Defaults to false.
     pub fn set_translate(&mut self, translate: bool) {
@@ -282,7 +282,8 @@ impl<'a, 'b> FullParams<'a, 'b> {
 
     /// Set the target language.
     ///
-    /// For auto-detection, set this to either "auto" or None.
+    /// For auto-detection, set this to either "auto" or None, or set [`Self::set_detect_language`] to true.
+    /// Either has the same effect.
     ///
     /// Defaults to "en".
     pub fn set_language(&mut self, language: Option<&'a str>) {
