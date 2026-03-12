@@ -434,6 +434,7 @@ impl Drop for WhisperInnerContext {
 unsafe impl Send for WhisperInnerContext {}
 unsafe impl Sync for WhisperInnerContext {}
 
+#[derive(Debug)]
 pub struct WhisperContextParameters<'a> {
     /// Use GPU if available.
     pub use_gpu: bool,

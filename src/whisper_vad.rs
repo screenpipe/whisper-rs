@@ -12,7 +12,7 @@ use whisper_rs_sys::{
 /// Configuration for Voice Activity Detection in `whisper.cpp`.
 ///
 /// See [the `whisper.cpp` README](https://github.com/ggml-org/whisper.cpp/#voice-activity-detection-vad) for more details.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct WhisperVadParams {
     params: whisper_vad_params,
 }
@@ -93,7 +93,7 @@ impl WhisperVadParams {
 }
 
 /// Whisper VAD context parameters
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct WhisperVadContextParams {
     params: whisper_vad_context_params,
 }
@@ -138,6 +138,7 @@ impl WhisperVadContextParams {
 /// A handle to use `whisper.cpp`'s built in VAD standalone.
 ///
 /// You probably want to use [`Self::segments_from_samples`].
+#[derive(Debug)]
 pub struct WhisperVadContext {
     ptr: *mut whisper_vad_context,
 }
@@ -232,6 +233,7 @@ impl Drop for WhisperVadContext {
 }
 
 /// You can obtain this struct from a [`WhisperVadContext`].
+#[derive(Debug)]
 pub struct WhisperVadSegments {
     ptr: *mut whisper_vad_segments,
     segment_count: c_int,
@@ -292,7 +294,7 @@ impl Iterator for WhisperVadSegments {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct WhisperVadSegment {
     /// Start timestamp of this segment in centiseconds.
     pub start: f32,

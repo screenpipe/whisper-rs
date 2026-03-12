@@ -1,6 +1,9 @@
 use crate::whisper_grammar::WhisperGrammarElement;
 use crate::whisper_vad::WhisperVadParams;
 use std::ffi::{c_char, c_float, c_int, CString};
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Result as FmtResult;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use whisper_rs_sys::whisper_token;
@@ -842,6 +845,33 @@ impl<'a, 'b> FullParams<'a, 'b> {
     /// Replace the VAD model parameters.
     pub fn set_vad_params(&mut self, params: WhisperVadParams) {
         self.fp.vad_params = params.into_inner();
+    }
+}
+
+impl Debug for FullParams<'_, '_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_struct("FullParams")
+            .field("fp", &self.fp)
+            .field("grammar", &self.grammar)
+            .field(
+                "progress_callback_safe",
+                &self
+                    .progress_callback_safe
+                    .as_ref()
+                    .map_or("None", |_| "Some"),
+            )
+            .field(
+                "abort_callback_safe",
+                &self.abort_callback_safe.as_ref().map_or("None", |_| "Some"),
+            )
+            .field(
+                "segment_calllback_safe",
+                &self
+                    .segment_calllback_safe
+                    .as_ref()
+                    .map_or("None", |_| "Some"),
+            )
+            .finish()
     }
 }
 

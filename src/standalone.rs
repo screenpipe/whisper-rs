@@ -109,6 +109,7 @@ pub fn print_system_info() -> &'static str {
 ///
 /// # C++ equivalent
 /// `int ggml_cpu_has_...`
+#[derive(Debug)]
 pub struct SystemInfo {
     pub avx: bool,
     pub avx2: bool,

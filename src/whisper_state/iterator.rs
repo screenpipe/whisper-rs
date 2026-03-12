@@ -3,6 +3,7 @@ use crate::WhisperState;
 use std::ffi::c_int;
 
 /// An iterator over a [`WhisperState`]'s result.
+#[derive(Debug)]
 pub struct WhisperStateSegmentIterator<'a> {
     state_ptr: &'a WhisperState,
     current_segment: c_int,
