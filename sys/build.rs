@@ -56,7 +56,12 @@ fn main() {
         println!("cargo:rustc-link-lib=cuda");
         cfg_if::cfg_if! {
             if #[cfg(target_os = "windows")] {
-                let cuda_path = PathBuf::from(env::var("CUDA_PATH").unwrap()).join("lib/x64");
+                let cuda_lib = if target == "aarch64-pc-windows-msvc" {
+                    "lib/arm64"
+                } else {
+                    "lib/x64"
+                };
+                let cuda_path = PathBuf::from(env::var("CUDA_PATH").unwrap()).join(cuda_lib);
                 println!("cargo:rustc-link-search={}", cuda_path.display());
             } else {
                 println!("cargo:rustc-link-lib=culibos");
@@ -116,9 +121,33 @@ fn main() {
         });
     }
 
-    if env::var("WHISPER_DONT_GENERATE_BINDINGS").is_ok() {
-        let _: u64 = std::fs::copy("src/bindings.rs", out.join("bindings.rs"))
-            .expect("Failed to copy bindings.rs");
+    // On Windows ARM64 bindgen produces opaque structs; use bundled bindings (with layout tests stripped).
+    let use_bundled = env::var("WHISPER_DONT_GENERATE_BINDINGS").is_ok()
+        || target == "aarch64-pc-windows-msvc";
+
+    if use_bundled {
+        let bundled = std::fs::read_to_string("src/bindings.rs").expect("Failed to read src/bindings.rs");
+        let out_bindings = if target == "aarch64-pc-windows-msvc" {
+            // Bundled bindings have layout assertions for a different arch; strip them on ARM64.
+            let mut skip_next_continuation = false;
+            bundled
+                .lines()
+                .filter(|line| {
+                    let trimmed = line.trim();
+                    let is_layout_line = trimmed.starts_with(r#"["Size of"#)
+                        || trimmed.starts_with(r#"["Alignment of"#)
+                        || trimmed.starts_with(r#"["Offset of"#);
+                    let is_continuation =
+                        skip_next_continuation && trimmed.starts_with("[::std::mem::");
+                    skip_next_continuation = is_layout_line && !trimmed.contains("];");
+                    !is_layout_line && !is_continuation
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+        } else {
+            bundled
+        };
+        std::fs::write(out.join("bindings.rs"), out_bindings).expect("Failed to write bindings.rs");
     } else {
         // https://github.com/rust-lang/rust-bindgen/issues/2691
         // https://github.com/rust-lang/rust-bindgen/issues/3264
@@ -148,6 +177,11 @@ fn main() {
             bindings = bindings
                 .header("whisper.cpp/ggml/include/ggml-vulkan.h")
                 .clang_arg("-DGGML_USE_VULKAN=1");
+        }
+
+        // Skip layout tests when cross-compiling to Windows ARM64 (host layout != target layout).
+        if target == "aarch64-pc-windows-msvc" {
+            bindings = bindings.layout_tests(false);
         }
 
         let bindings = bindings
@@ -190,8 +224,36 @@ fn main() {
         .very_verbose(true)
         .pic(true);
 
+    // Windows ARM64: use Clang via toolchain so ggml's ARM NEON code is built (disabled for MSVC cl.exe).
+    let is_windows_arm64 = target == "aarch64-pc-windows-msvc";
+    if is_windows_arm64 {
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
+        let toolchain = PathBuf::from(&manifest_dir)
+            .join("cmake")
+            .join("arm64-windows-msvc-clang.toolchain.cmake");
+        if toolchain.exists() {
+            let toolchain_str = toolchain.to_string_lossy().replace('\\', "/");
+            config.define("CMAKE_TOOLCHAIN_FILE", &toolchain_str);
+            config.generator("Ninja");
+            if cfg!(feature = "vulkan") {
+                config.define("GGML_VULKAN_SHADERS_GEN_TOOLCHAIN", &toolchain_str);
+            }
+        } else {
+            panic!(
+                "Windows ARM64 (aarch64-pc-windows-msvc) requires Clang. \
+                 Toolchain file not found: {}. \
+                 Install the \"C++ Clang compiler for Windows\" component in Visual Studio (or LLVM) \
+                 and ensure clang-cl and ninja are on PATH.",
+                toolchain.display()
+            );
+        }
+    }
+
     if cfg!(target_os = "windows") {
         config.cxxflag("/utf-8");
+        if is_windows_arm64 {
+            config.cxxflag("/EHsc");
+        }
         println!("cargo:rustc-link-lib=advapi32");
     }
 
@@ -227,7 +289,12 @@ fn main() {
                     "Please install Vulkan SDK and ensure that VULKAN_SDK env variable is set"
                 ),
             };
-            let vulkan_lib_path = vulkan_path.join("Lib");
+            let vulkan_lib_dir = if target == "aarch64-pc-windows-msvc" {
+                "Lib-ARM64"
+            } else {
+                "Lib"
+            };
+            let vulkan_lib_path = vulkan_path.join(vulkan_lib_dir);
             println!("cargo:rustc-link-search={}", vulkan_lib_path.display());
         } else if cfg!(target_os = "macos") {
             println!("cargo:rerun-if-env-changed=VULKAN_SDK");
