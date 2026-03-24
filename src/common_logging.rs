@@ -52,14 +52,32 @@ pub(crate) use {generic_debug, generic_error, generic_info, generic_trace, gener
 // Of course Windows thinks it's a special little shit and
 // picks a signed integer for an unsigned type
 #[cfg_attr(all(windows, not(target_env = "gnu")), repr(i32))]
-#[derive(Debug)]
+// Windows ARM64 MSVC: bundled bindings expose these as u32; cast to i32.
 pub enum GGMLLogLevel {
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     None = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_NONE,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    None = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_NONE as i32,
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Info = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_INFO,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Info = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_INFO as i32,
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Warn = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_WARN,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Warn = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_WARN as i32,
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Error = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_ERROR,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Error = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_ERROR as i32,
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Debug = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_DEBUG,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Debug = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_DEBUG as i32,
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Cont = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_CONT,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Cont = whisper_rs_sys::ggml_log_level_GGML_LOG_LEVEL_CONT as i32,
     Unknown(ggml_log_level),
 }
 impl From<ggml_log_level> for GGMLLogLevel {
@@ -75,3 +93,4 @@ impl From<ggml_log_level> for GGMLLogLevel {
         }
     }
 }
+

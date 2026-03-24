@@ -10,19 +10,40 @@ use whisper_rs_sys::{
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum WhisperGrammarElementType {
     /// End of rule definition
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     End = whisper_gretype_WHISPER_GRETYPE_END,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    End = whisper_gretype_WHISPER_GRETYPE_END as i32,
     /// Start of alternate definition for a rule
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Alternate = whisper_gretype_WHISPER_GRETYPE_ALT,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Alternate = whisper_gretype_WHISPER_GRETYPE_ALT as i32,
     /// Non-terminal element: reference to another rule
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     RuleReference = whisper_gretype_WHISPER_GRETYPE_RULE_REF,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    RuleReference = whisper_gretype_WHISPER_GRETYPE_RULE_REF as i32,
     /// Terminal element: character (code point)
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     Character = whisper_gretype_WHISPER_GRETYPE_CHAR,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    Character = whisper_gretype_WHISPER_GRETYPE_CHAR as i32,
     /// Inverse of a character(s)
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     NotCharacter = whisper_gretype_WHISPER_GRETYPE_CHAR_NOT,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    NotCharacter = whisper_gretype_WHISPER_GRETYPE_CHAR_NOT as i32,
     /// Modifies a preceding [Self::Character] to be an inclusive range
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     CharacterRangeUpper = whisper_gretype_WHISPER_GRETYPE_CHAR_RNG_UPPER,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    CharacterRangeUpper = whisper_gretype_WHISPER_GRETYPE_CHAR_RNG_UPPER as i32,
     /// Modifies a preceding [Self::Character] to add an alternate character to match
+    #[cfg(not(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc")))]
     CharacterAlternate = whisper_gretype_WHISPER_GRETYPE_CHAR_ALT,
+    #[cfg(all(target_arch = "aarch64", target_os = "windows", target_env = "msvc"))]
+    CharacterAlternate = whisper_gretype_WHISPER_GRETYPE_CHAR_ALT as i32,
 }
 
 impl From<whisper_rs_sys::whisper_gretype> for WhisperGrammarElementType {
@@ -78,3 +99,4 @@ impl WhisperGrammarElement {
         }
     }
 }
+
